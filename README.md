@@ -1,4 +1,4 @@
-# P4NTY-RPG-Assistant
+# RPG-Assistant
 Discord Bot for Pen &amp; Paper - Call of Cthulhu
 
 ## Command:
