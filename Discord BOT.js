@@ -112,7 +112,6 @@ client.on('message', msg => {
                     break;
             }
             [ test , result, dice ] = test_roll(value[1], bonus, penal, mod);
-
             if ( test <= -1) {
                 opt += `:x: Porażka    `
             }
@@ -147,12 +146,25 @@ Kalendarz: https://airtable.com/shrsaT4rhoqXLvwt1
             client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
             break;
         case '/setmg':
-            const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  value[1]))
+            const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  comment));
             if (typeof newMG !== 'undefined') {
-                MG = value[1];
+                MG = comment;
                 msg.reply(`zmieniłeś mistrza gry na ${newMG}`);
-
             }
+            else {
+                msg.reply(`przedwieczni nie chcą, by dany osobnik prowadził sesje`)
+            }
+            break;
+        case '/pomocy!':
+            opt = `
+/r 2k6              \`rzut dwiema kośćmi sześciościennymi\`
+/cr 2b 1p           \`rzut procentowy z dwiema kośćmi bonusowymi i jedną karną\`
+/tr 50 1/2 2b 1p    \`rzut na umiejętność (wartość 50), na połowę (1/2) z dwiema kośćmi bonusowymi i jedną karną\`
+/kiedy?             \`zwraca informację kiedy kolejna sesja, wraz z linkiem do kalendarza i formularzem do dodania nowej sesji\`
+/hr 2b 1p           \`ukryty rzut /cr 2b 1p wysyłany do MG\`
+/setMG \`Kiszu\`    \`ustawienie mistrza gry jako Kiszu\`
+`;
+            send = true;
             break;
         default:
             break;
