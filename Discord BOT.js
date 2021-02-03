@@ -112,6 +112,7 @@ client.on('message', msg => {
                     break;
             }
             [ test , result, dice ] = test_roll(value[1], bonus, penal, mod);
+
             if ( test <= -1) {
                 opt += `:x: Porażka    `
             }
@@ -119,6 +120,24 @@ client.on('message', msg => {
                 opt += `:white_check_mark: +${test + 1} Sukces   `
             }
             opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+            SessionBase('Rolling').create([
+                {
+                    "fields": {
+                        "Who": msg.author.username,
+                        "Roll": result,
+                        "isSuccess": test >= 0,
+                        "Comment": comment
+                    }
+                },
+                ], function(err, records) {
+                if (err) {
+                    console.log(err)
+                    return;
+                }
+                records.forEach(function (record) {
+                    console.log(record.getId());
+                });
+            });
             send = true;
             break;
         case '/kiedy?':
