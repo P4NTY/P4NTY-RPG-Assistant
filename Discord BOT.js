@@ -8,6 +8,24 @@ const SkillBase = new Airtable({apiKey: 'TOKEN_2'}).base('app5rtOzZ8X6ee5hU');
 
 let MG = 'Kiszu';
 
+const MapMod = [
+    {
+        name: 'Trudny',
+        short: '1/2',
+        value: 2
+    },
+    {
+        name: 'Ekstremalny',
+        short: '1/5',
+        value: 3
+    },
+    {
+        name: 'Krytyczny',
+        short: '1/100',
+        value: 4
+    }
+]
+
 const roll = (dice = 1, walls = 6) => {
     const result = [];
 
@@ -37,25 +55,25 @@ const c_roll = (bonus = 0, penal = 0) => {
     }
 }
 
-const test_roll = (skill, bonus = 0, penal = 0, mod = 0) => {
+const test_roll = (skill, bonus = 0, penal = 0, mod = 1) => {
     const [rolling, result] = c_roll(bonus, penal);
 
     if ( (rolling >= 96 && skill < 50) || rolling === 100 ){
-        return [-2 + mod, rolling];
+        return [-2, rolling];
     }
-    else if (skill < rolling) {
-        return [-1 + mod, rolling, result];
+    else if ((skill/mod) < rolling) {
+        return [-1, rolling, result];
     }
     else if ( rolling === 1 ){
-        return [3 + mod, rolling, result];
+        return [3, rolling, result];
     }
-    else if ( skill/5 >= rolling ) {
-        return [2 + mod, rolling, result];
+    else if ( (skill/mod)/5 >= rolling ) {
+        return [2, rolling, result];
     }
-    else if ( skill/2 >= rolling ){
-        return [1 + mod, rolling, result];
+    else if ( (skill/mod)/2 >= rolling ){
+        return [1, rolling, result];
     }
-    return [0 + mod, rolling, result];
+    return [0, rolling, result];
 }
 
 // client.on('ready', () => {  });
@@ -64,6 +82,28 @@ const AddComment = (comment) => {
     if (comment.length > 0) return '    `' + comment + '`';
     else return '';
 }
+
+const SaveRoll = (user, result, isSuccess, comment) => {
+    SessionBase('Rolling').create([
+        {
+            "fields": {
+                "Who": user,
+                "Roll": result,
+                "isSuccess": isSuccess,
+                "Comment": comment
+            }
+        },
+    ],()=>{});
+}
+
+const help = () => `
+/r 2k6              \`rzut dwiema kośćmi sześciościennymi\`
+/cr 2b 1p           \`rzut procentowy z dwiema kośćmi bonusowymi i jedną karną\`
+/tr 50 1/2 2b 1p    \`rzut na umiejętność (wartość 50), na połowę (1/2) z dwiema kośćmi bonusowymi i jedną karną\`
+/kiedy?             \`zwraca informację kiedy kolejna sesja, wraz z linkiem do kalendarza i formularzem do dodania nowej sesji\`
+/hr 2b 1p           \`ukryty rzut /cr 2b 1p wysyłany do MG\`
+/setMG \`Kiszu\`    \`ustawienie mistrza gry jako Kiszu\`
+`
 
 client.on('message', msg => {
     const value = [];
@@ -97,47 +137,18 @@ client.on('message', msg => {
             break;
         //Test Roll
         case '/tr':
-            let mod = 0;
-            switch (value[2]) {
-                case '1/2':
-                    mod = -1;
-                    break;
-                case '1/5':
-                    mod = -2;
-                    break;
-                case '1/100':
-                    mod = -3;
-                    break;
-                default:
-                    break;
-            }
+            let mod = value[2] ? value[2].split('/')[1] : 1;
             [ test , result, dice ] = test_roll(value[1], bonus, penal, mod);
-
             if ( test <= -1) {
                 opt += `:x: Porażka    `
             }
             else {
-                opt += `:white_check_mark: +${test + 1} Sukces   `
+                opt += `(+${test + 1}) :white_check_mark: ${MapMod.map( x => x.value).indexOf(test + 1) !== -1
+                    ? MapMod[MapMod.map( x => x.value).indexOf(test + 1)].name
+                : 'Zwykły'} Sukces   `;
             }
             opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-            SessionBase('Rolling').create([
-                {
-                    "fields": {
-                        "Who": msg.author.username,
-                        "Roll": result,
-                        "isSuccess": test >= 0,
-                        "Comment": comment
-                    }
-                },
-                ], function(err, records) {
-                if (err) {
-                    console.log(err)
-                    return;
-                }
-                records.forEach(function (record) {
-                    console.log(record.getId());
-                });
-            });
+            SaveRoll(msg.author.username, result, test >= 0, comment);
             send = true;
             break;
         case '/kiedy?':
@@ -175,14 +186,7 @@ Kalendarz: https://airtable.com/shrsaT4rhoqXLvwt1
             }
             break;
         case '/pomocy!':
-            opt = `
-/r 2k6              \`rzut dwiema kośćmi sześciościennymi\`
-/cr 2b 1p           \`rzut procentowy z dwiema kośćmi bonusowymi i jedną karną\`
-/tr 50 1/2 2b 1p    \`rzut na umiejętność (wartość 50), na połowę (1/2) z dwiema kośćmi bonusowymi i jedną karną\`
-/kiedy?             \`zwraca informację kiedy kolejna sesja, wraz z linkiem do kalendarza i formularzem do dodania nowej sesji\`
-/hr 2b 1p           \`ukryty rzut /cr 2b 1p wysyłany do MG\`
-/setMG \`Kiszu\`    \`ustawienie mistrza gry jako Kiszu\`
-`;
+            opt = help();
             send = true;
             break;
         default:
