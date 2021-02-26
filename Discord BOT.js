@@ -83,27 +83,28 @@ const AddComment = (comment) => {
     else return '';
 }
 
-const SaveRoll = (user, result, isSuccess, comment) => {
+const SaveRoll = (user, result, isSuccess, comment, isBonus) => {
     SessionBase('Rolling').create([
         {
             "fields": {
                 "Who": user,
                 "Roll": result,
                 "isSuccess": isSuccess,
-                "Comment": comment
+                "Comment": comment,
+                "isBonus?": isBonus
             }
         },
     ],()=>{});
 }
 
 const help = () => `
-/r 2k6              \`rzut dwiema kośćmi sześciościennymi\`
-/cr 2b 1p           \`rzut procentowy z dwiema kośćmi bonusowymi i jedną karną\`
-/tr 50 1/2 2b 1p    \`rzut na umiejętność (wartość 50), na połowę (1/2) z dwiema kośćmi bonusowymi i jedną karną\`
-/kiedy?             \`zwraca informację kiedy kolejna sesja, wraz z linkiem do kalendarza i formularzem do dodania nowej sesji\`
-/hr 2b 1p           \`ukryty rzut /cr 2b 1p wysyłany do MG\`
-/setMG \`Kiszu\`    \`ustawienie mistrza gry jako Kiszu\`
-`
+/r 2k6 \t \`rzut dwiema kośćmi sześciościennymi\`
+/cr 2b 1p \t \`rzut procentowy z dwiema kośćmi bonusowymi i jedną karną\`
+/tr 50 1/2 2b 1p \t \`rzut na umiejętność (wartość 50), na połowę (1/2) z dwiema kośćmi bonusowymi i jedną karną\`
+/kiedy? \t \`zwraca informację kiedy kolejna sesja, wraz z linkiem do kalendarza i formularzem do dodania nowej sesji\`
+/hr 2b 1p \t \`ukryty rzut /cr 2b 1p wysyłany do MG\`
+/setMG \`Kiszu\` \t \`ustawienie mistrza gry jako Kiszu\`
+`;
 
 client.on('message', msg => {
     const value = [];
@@ -148,18 +149,18 @@ client.on('message', msg => {
                 : 'Zwykły'} Sukces   `;
             }
             opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-            SaveRoll(msg.author.username, result, test >= 0, comment);
+            SaveRoll(msg.author.username, result, test >= 0, comment, typeof bonus !== 'undefined');
             send = true;
             break;
         case '/kiedy?':
             SessionBase('Session').select({
                 maxRecords: 1,
                 view: "Grid view",
-                filterByFormula: "DATESTR(DATEADD(TODAY(),1,'days')) <= DATESTR(Day)"
+                filterByFormula: "DATESTR(DATEADD(TODAY(),0,'days')) <= DATESTR(Day)"
             }).eachPage(function page(records, fetchNextPage) {
                 records.forEach(function(record) {
                     opt += `
-Kolejna sesja: ` + '`' + record.get('Name') + '`' + ` ${record.get('Day').split('T').join(' ').slice(0, 16)}
+Kolejna sesja: ` + '`' + record.get('Name') + '`' + ` ${new Date(record.get('Day')).toLocaleString()}
 
 Dodaj sesję: https://airtable.com/shr3k4qZEPoe6KQkd
 Kalendarz: https://airtable.com/shrsaT4rhoqXLvwt1
