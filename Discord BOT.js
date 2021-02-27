@@ -78,11 +78,6 @@ const test_roll = (skill, bonus = 0, penal = 0, mod = 1) => {
 
 // client.on('ready', () => {  });
 
-const AddComment = (comment) => {
-    if (comment.length > 0) return '    `' + comment + '`';
-    else return '';
-}
-
 const SaveRoll = (user, result, isSuccess, comment, isBonus) => {
     SessionBase('Rolling').create([
         {
@@ -106,95 +101,100 @@ const help = () => `
 /setMG \`Kiszu\` \t \`ustawienie mistrza gry jako Kiszu\`
 `;
 
-client.on('message', msg => {
-    const value = [];
-    let comment = '';
-    if (msg.content.indexOf('`') > 0){
-        comment = msg.content.split('`')[1];
-        value.push(...msg.content.slice(0,msg.content.indexOf('`')).split(' '));
+const TestText = (test) => {
+    if ( test <= -1) {
+        return `:x: Porażka    `
     }
     else {
-        value.push(...msg.content.split(' '));
+        return `(+${test + 1}) :white_check_mark: ${MapMod.map( x => x.value).indexOf(test + 1) !== -1
+            ? MapMod[MapMod.map( x => x.value).indexOf(test + 1)].name
+        : 'Zwykły'} Sukces   `;
     }
-    const [bonus, penal] = ([
-        value.join()[value.join().indexOf('b') - 1],
-        value.join()[value.join().indexOf('p') - 1]
-    ]);
-    let opt = ``;
-    let send = false;
+}
 
-    switch (value[0].toLocaleLowerCase()) {
-        //Roll
-        case '/r':
-            [ dice , walls ] = value[1] ? value[1].split('k') : [1,6];
-            opt = roll( dice , walls );
-            send = true;
-            break;
-        //Precent Roll
-        case '/cr':
-            [result, dice] = c_roll(bonus,penal);
-            opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-            send = true;
-            break;
-        //Test Roll
-        case '/tr':
-            let mod = value[2] ? value[2].split('/')[1] : 1;
-            [ test , result, dice ] = test_roll(value[1], bonus, penal, mod);
-            if ( test <= -1) {
-                opt += `:x: Porażka    `
-            }
-            else {
-                opt += `(+${test + 1}) :white_check_mark: ${MapMod.map( x => x.value).indexOf(test + 1) !== -1
-                    ? MapMod[MapMod.map( x => x.value).indexOf(test + 1)].name
-                : 'Zwykły'} Sukces   `;
-            }
-            opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-            SaveRoll(msg.author.username, result, test >= 0, comment, typeof bonus !== 'undefined');
-            send = true;
-            break;
-        case '/kiedy?':
-            SessionBase('Session').select({
-                maxRecords: 1,
-                view: "Grid view",
-                filterByFormula: "DATESTR(DATEADD(TODAY(),0,'days')) <= DATESTR(Day)"
-            }).eachPage(function page(records, fetchNextPage) {
-                records.forEach(function(record) {
-                    opt += `
+const When = (msg) => {
+    SessionBase('Session').select({
+        maxRecords: 1,
+        view: "Grid view",
+        filterByFormula: "DATESTR(DATEADD(TODAY(),0,'days')) <= DATESTR(Day)"
+    }).eachPage(function page(records, fetchNextPage) {
+        records.forEach(function(record) {
+            msg.reply(`
 Kolejna sesja: ` + '`' + record.get('Name') + '`' + ` ${new Date(record.get('Day')).toLocaleString()}
 
 Dodaj sesję: https://airtable.com/shr3k4qZEPoe6KQkd
 Kalendarz: https://airtable.com/shrsaT4rhoqXLvwt1
-`;
-                });
-                msg.reply(opt);
-            }, function done(err) {
-                if (err) { console.error(err); return; }
-            })
-            break;
-        case '/hr':
-            [result, dice] = c_roll(bonus,penal);
-            opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-            client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
-            break;
-        case '/setmg':
-            const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  comment));
-            if (typeof newMG !== 'undefined') {
-                MG = comment;
-                msg.reply(`zmieniłeś mistrza gry na ${newMG}`);
-            }
-            else {
-                msg.reply(`przedwieczni nie chcą, by dany osobnik prowadził sesje`)
-            }
-            break;
-        case '/pomocy!':
-            opt = help();
-            send = true;
-            break;
-        default:
-            break;
-    }
-    if(send) {
-        msg.reply(opt + AddComment(comment));
+`);
+        });
+    }, function done(err) {
+        if (err) { console.error(err); return; }
+    })
+}
+
+client.on('message', msg => {
+
+    const question = msg.content.split(' ');
+    const option = question[0].toLocaleLowerCase();
+    if (option[0] === '/'){
+        const [dices, walls] = [...question, '0k0'].filter(x=> x.indexOf('k') !== -1)[0].split('k');
+        const mod = [...question, '1/1'].filter(x=> x.indexOf('/') !== -1)[1].split('/')[1];
+        const skill = question.filter(x=> !isNaN(parseInt(x)))[0];
+        const comment = question.filter(x=> x.indexOf('`') === 0);
+        const bonus = [...question, '0b'].filter(x => x.indexOf('b') !== -1)[0].slice(0, -1);
+        const penal = [...question, '0p'].filter(x => x.indexOf('p') !== -1)[0].slice(0, -1);
+
+        let opt = ``;
+        let send = false;
+
+        switch (option) {
+            //Roll
+            case '/r':
+                opt = roll( dices , walls );
+                send = true;
+                break;
+            //Precent Roll
+            case '/cr':
+                [result, dice] = c_roll(bonus,penal);
+                opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                send = true;
+                break;
+            //Test Roll
+            case '/tr':
+                [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
+                opt += TestText(test);
+                opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                SaveRoll(msg.author.username, result, test >= 0, comment, typeof bonus !== 'undefined');
+                send = true;
+                break;
+            case '/hr':
+                [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
+                opt += TestText(test);
+                opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                break;
+            case '/setmg':
+                const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  comment));
+                if (typeof newMG !== 'undefined') {
+                    MG = comment;
+                    msg.reply(`zmieniłeś mistrza gry na ${newMG}`);
+                }
+                else {
+                    msg.reply(`przedwieczni nie chcą, by dany osobnik prowadził sesje`)
+                }
+                break;
+            case '/pomocy!':
+                opt = help();
+                send = true;
+                break;
+            case '/kiedy?':
+                When(msg);
+                break;
+            default:
+                break;
+        }
+        if(send) {
+            msg.reply(opt + comment);
+        }
     }
 });
 
