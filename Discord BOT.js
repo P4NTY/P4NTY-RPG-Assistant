@@ -139,10 +139,9 @@ client.on('message', msg => {
         const [dices, walls] = [...question, '0k0'].filter(x=> x.indexOf('k') !== -1)[0].split('k');
         const mod = [...question, '1/1'].filter(x=> x.indexOf('/') !== -1)[1].split('/')[1];
         const skill = question.filter(x=> !isNaN(parseInt(x)))[0];
-        const comment = question.filter(x=> x.indexOf('`') === 0);
-        const bonus = [...question, '0b'].filter(x => x.indexOf('b') !== -1)[0].slice(0, -1);
-        const penal = [...question, '0p'].filter(x => x.indexOf('p') !== -1)[0].slice(0, -1);
-
+        const comment = question.filter(x=> x.indexOf('`') === 0)[0]||' ';
+        const bonus = [...question, '0b'].map(x => x.toString().match(/[0-9]b/g)).filter(x => x)[0].toString().slice(0, -1);
+        const penal = [...question, '0p'].map(x => x.toString().match(/[0-9]p/g)).filter(x => x)[0].toString().slice(0, -1);
         let opt = ``;
         let send = false;
 
@@ -193,7 +192,7 @@ client.on('message', msg => {
                 break;
         }
         if(send) {
-            msg.reply(opt + comment);
+            msg.reply(`${opt} ${comment}`);
         }
     }
 });
