@@ -132,14 +132,13 @@ Kalendarz: https://airtable.com/shrsaT4rhoqXLvwt1
 }
 
 client.on('message', msg => {
-
     const question = msg.content.split(' ');
     const option = question[0].toLocaleLowerCase();
     if (option[0] === '/'){
         const [dices, walls] = [...question, '0k0'].filter(x=> x.indexOf('k') !== -1)[0].split('k');
         const mod = [...question, '1/1'].filter(x=> x.indexOf('/') !== -1)[1].split('/')[1];
         const skill = question.filter(x=> !isNaN(parseInt(x)))[0];
-        const comment = question.filter(x=> x.indexOf('`') === 0)[0]||' ';
+        const comment = msg.content.split('`')[1]||' ';
         const bonus = [...question, '0b'].map(x => x.toString().match(/[0-9]b/g)).filter(x => x)[0].toString().slice(0, -1);
         const penal = [...question, '0p'].map(x => x.toString().match(/[0-9]p/g)).filter(x => x)[0].toString().slice(0, -1);
         let opt = ``;
@@ -148,43 +147,82 @@ client.on('message', msg => {
         switch (option) {
             //Roll
             case '/r':
-                opt = roll( dices , walls );
-                send = true;
+                try {
+                    opt = roll( dices , walls );
+                    send = true;
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
                 break;
             //Precent Roll
             case '/cr':
-                [result, dice] = c_roll(bonus,penal);
-                opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                send = true;
+                try {
+                    [result, dice] = c_roll(bonus,penal);
+                    opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                    send = true;
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
                 break;
             //Test Roll
             case '/tr':
-                [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
-                opt += TestText(test);
-                opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                SaveRoll(msg.author.username, result, test >= 0, comment, typeof bonus !== 'undefined');
-                send = true;
+                try {
+                    [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
+                    opt += TestText(test);
+                    opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                    SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
+                    send = true;
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
                 break;
+            //Hide Roll
             case '/hr':
-                [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
-                opt += TestText(test);
-                opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                try {
+                    [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
+                    opt += TestText(test);
+                    opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                    SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
                 break;
+            //Set MG
             case '/setmg':
-                const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  comment));
-                if (typeof newMG !== 'undefined') {
-                    MG = comment;
-                    msg.reply(`zmieniłeś mistrza gry na ${newMG}`);
-                }
-                else {
-                    msg.reply(`przedwieczni nie chcą, by dany osobnik prowadził sesje`)
+                try {
+                    const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  comment));
+                    if (typeof newMG !== 'undefined') {
+                        MG = comment;
+                        msg.reply(`zmieniłeś mistrza gry na ${newMG}`);
+                    }
+                    else
+                        msg.reply(`przedwieczni nie chcą, by dany osobnik prowadził sesje`);
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
                 }
                 break;
+            //Help!
             case '/pomocy!':
                 opt = help();
                 send = true;
                 break;
+            //Kiedy?
             case '/kiedy?':
                 When(msg);
                 break;
@@ -192,7 +230,7 @@ client.on('message', msg => {
                 break;
         }
         if(send) {
-            msg.reply(`${opt} ${comment}`);
+            msg.reply(opt + ' `' + comment + '`');
         }
     }
 });
