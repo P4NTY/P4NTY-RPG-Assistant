@@ -59,7 +59,7 @@ const test_roll = (skill, bonus = 0, penal = 0, mod = 1) => {
     const [rolling, result] = c_roll(bonus, penal);
 
     if ( (rolling >= 96 && skill < 50) || rolling === 100 ){
-        return [-2, rolling];
+        return [-2, rolling, result];
     }
     else if ((skill/mod) < rolling) {
         return [-1, rolling, result];
