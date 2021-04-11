@@ -1,7 +1,6 @@
 # RPG-Assistant
-Discord Bot for Pen &amp; Paper - Call of Cthulhu
+Discord Bot for Pen &amp; Paper rolling
 
-## Command:
 Normal roll: 
   -
  -  /r [dices]k[walls]
