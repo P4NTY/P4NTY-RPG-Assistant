@@ -7,7 +7,7 @@ Normal roll:
  -  input:  /r 2k6
  -  output: [ 5 , 1 ]   :arrow_forward:   6 
 
-Call of Cthulhu roll:
+Call of Cthulhu:
   -
   - Normal:
     - /cr [bonus dices]b [penal dices]p
