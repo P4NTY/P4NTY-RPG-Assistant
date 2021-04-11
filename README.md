@@ -17,7 +17,9 @@ Call of Cthulhu:
     - /cr [skill] [difficult] [bonus dices]b [penal dices]p
     - input: /cr 50 1/2 2b 1p
     - output: :x: Porażka    [ 1 , 80 , 30 ]   :arrow_forward:   31
-    
+  - Hide Roll `result send to MG`
+    - /hcr [skill] [difficult] [bonus dices]b [penal dices]p
+     
 Warhammer:
   - 
   - Normal
@@ -28,15 +30,26 @@ Warhammer:
     - /wr [skill]
     - input: /wr 50
     - output: [ 7 , 20 , 10 ]   :arrow_forward:   17 
+  - Hide Roll `result send to MG`
+    - /hwr [skill]
 
 Dungeons & Dragons:
 -
-  - /dr [modyficator] [bonus dices]b
-  - input: /dr -4 2b
-  - output: [ 19,17,7 ] -4  :arrow_forward:   15 
+  - Nromal roll
+    - input: /dr
+    - output:  [ 10 ]   :arrow_forward:   10
+  - Skill roll
+    - /dr [modyficator] [bonus dices]b
+    - input: /dr -4 2b
+    - output: [ 19,17,7 ] -4  :arrow_forward:   15 
+  - Hide Roll `result send to MG`
+    - /hdr [modyficator] [bonus dices]b
 
 Tales from the Loop
 -
-  - /tr [dices]
-  - input: /tr 10
-  - output: [ 6 , 4 , 4 , 2 , 2 , 5 , 4 , 2 , 3 , 4 ]  :arrow_forward:   1
+  - Normal roll
+    - /tr [dices]
+    - input: /tr 10
+    - output: [ 6 , 4 , 4 , 2 , 2 , 5 , 4 , 2 , 3 , 4 ]  :arrow_forward:   1
+  - Hide Roll `result send to MG`
+    - /htr [dices]
