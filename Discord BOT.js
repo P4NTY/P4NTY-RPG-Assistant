@@ -82,8 +82,7 @@ const tales_roll = (dice) => {
 const war_roll = (skill = '') => {
     const unit = Math.floor(Math.random() * 10) + 1;
     const dec = Math.floor(Math.random() * 10) * 10;
-
-    return `${skill === '' ? TestText(skill - dec+unit > 0) : ''} [ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`;
+    return `${skill !== '' ? TestText(skill - dec+unit > 0) : ''} [ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`;
 }
 
 const dnd_roll = (bonus = 0, mod = 0) => {
