@@ -29,7 +29,7 @@ Warhammer:
   - Skill test roll
     - /wr [skill]
     - input: /wr 50
-    - output: [ 7 , 20 , 10 ]   :arrow_forward:   17 
+    - output:  (+2) :white_check_mark: Trudny Sukces    [ 0, 1 ]   :arrow_forward:   1
   - Hide Roll `result send to MG`
     - /hwr [skill]
 
