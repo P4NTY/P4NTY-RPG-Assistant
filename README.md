@@ -53,3 +53,9 @@ Tales from the Loop
     - output: [ 6 , 4 , 4 , 2 , 2 , 5 , 4 , 2 , 3 , 4 ]  :arrow_forward:   1
   - Hide Roll `result send to MG`
     - /htr [dices]
+
+Other command:
+-
+  - /setMG `Kiszu` - set Game Master for channel
+  - /pomocy! - paste link to this Readme
+  - /kiedy? - return next session info
