@@ -57,23 +57,43 @@ const c_roll = (bonus = 0, penal = 0) => {
 
 const test_roll = (skill, bonus = 0, penal = 0, mod = 1) => {
     const [rolling, result] = c_roll(bonus, penal);
+    let counter = 0;
 
-    if ( (rolling >= 96 && skill < 50) || rolling === 100 ){
-        return [-2, rolling, result];
+    if ( (rolling >= 96 && skill < 50) || rolling === 100 ) counter = -2;
+    else if ( rolling === 1 ) counter = 3;
+    else if ((skill/mod) < rolling) counter = -1;
+    else if ( (skill/mod)/5 >= rolling ) counter = 2;
+    else if ( (skill/mod)/2 >= rolling ) counter = 1;
+
+    return [counter, rolling, result];
+}
+
+const tales_roll = (dice) => {
+    const result = [];
+    let iterator = 0;
+    do {
+        result.push( Math.floor(Math.random() * 6) + 1 );
+        iterator++;
+    }while( iterator < dice )
+
+    return `[ ${ result.join(' , ') } ]  :arrow_forward:   ${ result.filter( res => res === 6 ).length}`;
+}
+
+const war_roll = () => {
+    const unit = Math.floor(Math.random() * 10) + 1;
+    const dec = Math.floor(Math.random() * 10) * 10;
+
+    return `[ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`
+}
+
+const dnd_roll = (bonus = 0, mod = 0) => {
+    const result = [Math.floor(Math.random() * 20) + 1];
+    for (let index = 1; index <= bonus; index++) {
+        result.push(Math.floor(Math.random() * 20) + 1)
     }
-    else if ((skill/mod) < rolling) {
-        return [-1, rolling, result];
-    }
-    else if ( rolling === 1 ){
-        return [3, rolling, result];
-    }
-    else if ( (skill/mod)/5 >= rolling ) {
-        return [2, rolling, result];
-    }
-    else if ( (skill/mod)/2 >= rolling ){
-        return [1, rolling, result];
-    }
-    return [0, rolling, result];
+    const modifcator = mod !== 0 ? (mod > 0 ? '+' : '') + mod : ''
+
+    return `[ ${ result } ] ${modifcator}  :arrow_forward:   ${ result.filter(res => res === 1).length ? 1 : Math.max( ...result ) + parseInt(mod)}`;
 }
 
 // client.on('ready', () => {  });
@@ -92,14 +112,7 @@ const SaveRoll = (user, result, isSuccess, comment, isBonus) => {
     ],()=>{});
 }
 
-const help = () => `
-/r 2k6 \t \`rzut dwiema kośćmi sześciościennymi\`
-/cr 2b 1p \t \`rzut procentowy z dwiema kośćmi bonusowymi i jedną karną\`
-/tr 50 1/2 2b 1p \t \`rzut na umiejętność (wartość 50), na połowę (1/2) z dwiema kośćmi bonusowymi i jedną karną\`
-/kiedy? \t \`zwraca informację kiedy kolejna sesja, wraz z linkiem do kalendarza i formularzem do dodania nowej sesji\`
-/hr 2b 1p \t \`ukryty rzut /cr 2b 1p wysyłany do MG\`
-/setMG \`Kiszu\` \t \`ustawienie mistrza gry jako Kiszu\`
-`;
+const help = () => `https://github.com/P4NTY/P4NTY-RPG-Assistant`;
 
 const TestText = (test) => {
     if ( test <= -1) {
@@ -157,7 +170,7 @@ client.on('message', msg => {
                     })
                 }
                 break;
-            //Precent Roll
+            //Cthulhu Roll
             case '/cr':
                 try {
                     [result, dice] = c_roll(bonus,penal);
@@ -170,8 +183,8 @@ client.on('message', msg => {
                     })
                 }
                 break;
-            //Test Roll
-            case '/tr':
+            //Test cthulhu Roll
+            case '/tcr':
                 try {
                     [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
                     opt += TestText(test);
@@ -185,8 +198,44 @@ client.on('message', msg => {
                     })
                 }
                 break;
+            //Warhammer roll
+            case '/wr':
+                try {
+                    opt += war_roll();
+                    send = true;
+                } catch (error) {
+                    console.err({
+                        error: error,
+                        msg: question
+                    })
+                }
+                break;
+            //Tales from the loop roll
+            case '/tr':
+                try {
+                    opt += tales_roll(skill);
+                    send = true;
+                } catch (error) {
+                    console.err({
+                        error: error,
+                        msg: question
+                    })
+                }
+                break;
+            //Dungeons and Dragons roll
+            case '/dr':
+                try {
+                    opt += dnd_roll(bonus, skill);
+                    send = true;
+                } catch (error) {
+                    console.err({
+                        error: error,
+                        msg: question
+                    })
+                }
+                break;
             //Hide Roll
-            case '/hr':
+            case '/htr':
                 try {
                     [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
                     opt += TestText(test);
@@ -230,7 +279,7 @@ client.on('message', msg => {
                 break;
         }
         if(send) {
-            msg.reply(opt + ' `' + comment + '`');
+            msg.reply(opt + (comment.length ? ' `' + comment + '`' : '') );
         }
     }
 });
