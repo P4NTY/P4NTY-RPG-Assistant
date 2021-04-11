@@ -14,15 +14,20 @@ Call of Cthulhu:
     - input: /cr 2b 1p 
     - output: [ 7 , 20 , 10 ]   :arrow_forward:   17 
   - Skill test roll:
-    - /tcr [skill] [difficult] [bonus dices]b [penal dices]p
-    - input: /tcr 50 1/2 2b 1p
+    - /cr [skill] [difficult] [bonus dices]b [penal dices]p
+    - input: /cr 50 1/2 2b 1p
     - output: :x: Porażka    [ 1 , 80 , 30 ]   :arrow_forward:   31
     
 Warhammer:
   - 
-  - /wr
-  - input: /wr
-  - output: [ 70, 6 ]   :arrow_forward:   76 
+  - Normal
+    - /wr
+    - input: /wr
+    - output: [ 70, 6 ]   :arrow_forward:   76 
+  - Skill test roll
+    - /wr [skill]
+    - input: /wr 50
+    - output: [ 7 , 20 , 10 ]   :arrow_forward:   17 
 
 Dungeons & Dragons:
 -
