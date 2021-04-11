@@ -6,7 +6,7 @@ const Airtable = require('airtable');
 const SessionBase = new Airtable({apiKey: 'TOKEN_2'}).base('appZVNPER2qH6vdnJ');
 const SkillBase = new Airtable({apiKey: 'TOKEN_2'}).base('app5rtOzZ8X6ee5hU');
 
-let MG = 'Kiszu';
+const MG = {};
 
 const MapMod = [
     {
@@ -80,7 +80,7 @@ const tales_roll = (dice) => {
 const war_roll = (skill = '') => {
     const unit = Math.floor(Math.random() * 10) + 1;
     const dec = Math.floor(Math.random() * 10) * 10;
-    return `${skill !== '' ? TestText(skill - dec+unit > 0) : ''} [ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`;
+    return `${skill !== '' ? TestText( parseInt( (skill-dec)/10 ) - 1 ) : ''} [ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`;
 }
 
 const dnd_roll = (bonus = 0, mod = 0) => {
@@ -111,7 +111,7 @@ const SaveRoll = (user, result, isSuccess, comment, isBonus) => {
 const help = () => `https://github.com/P4NTY/P4NTY-RPG-Assistant`;
 
 const TestText = (test) => {
-    if ( test <= -1 || test === false ) {
+    if ( test <= -1 ) {
         return `:x: Porażka    `
     }
     else {
@@ -229,7 +229,7 @@ client.on('message', msg => {
                     [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
                     opt += TestText(test);
                     opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                     SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
                 } catch (error) {
                     console.error({
@@ -242,7 +242,7 @@ client.on('message', msg => {
             case '/hdr':
                 try {
                     opt += dnd_roll(bonus, skill);
-                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
                     console.error({
                         error: error,
@@ -254,7 +254,7 @@ client.on('message', msg => {
             case '/hwr':
                 try {
                     opt += war_roll(skill);
-                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
                     console.error({
                         error: error,
@@ -266,7 +266,7 @@ client.on('message', msg => {
             case '/htr':
                 try {
                     opt += tales_roll(skill);
-                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
                     console.error({
                         error: error,
@@ -279,7 +279,7 @@ client.on('message', msg => {
                 try {
                     const newMG = client.users.cache.get(client.users.cache.findKey( x => x.username ===  comment));
                     if (typeof newMG !== 'undefined') {
-                        MG = comment;
+                        MG[msg.author.lastMessageChannelID] = comment;
                         msg.reply(`zmieniłeś mistrza gry na ${newMG}`);
                     }
                     else
