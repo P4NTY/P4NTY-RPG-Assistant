@@ -79,11 +79,11 @@ const tales_roll = (dice) => {
     return `[ ${ result.join(' , ') } ]  :arrow_forward:   ${ result.filter( res => res === 6 ).length}`;
 }
 
-const war_roll = () => {
+const war_roll = (skill = '') => {
     const unit = Math.floor(Math.random() * 10) + 1;
     const dec = Math.floor(Math.random() * 10) * 10;
 
-    return `[ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`
+    return `${skill === '' ? TestText(skill - dec+unit > 0) : ''} [ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`;
 }
 
 const dnd_roll = (bonus = 0, mod = 0) => {
@@ -115,7 +115,7 @@ const SaveRoll = (user, result, isSuccess, comment, isBonus) => {
 const help = () => `https://github.com/P4NTY/P4NTY-RPG-Assistant`;
 
 const TestText = (test) => {
-    if ( test <= -1) {
+    if ( test <= -1 || test === false ) {
         return `:x: Porażka    `
     }
     else {
@@ -173,23 +173,16 @@ client.on('message', msg => {
             //Cthulhu Roll
             case '/cr':
                 try {
-                    [result, dice] = c_roll(bonus,penal);
-                    opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                    send = true;
-                } catch (error) {
-                    console.error({
-                        error: error,
-                        msg: question
-                    })
-                }
-                break;
-            //Test cthulhu Roll
-            case '/tcr':
-                try {
-                    [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
-                    opt += TestText(test);
-                    opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                    SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
+                    if ( typeof skill === 'undefined' || skill.indexOf('b') !== -1 || skill.indexOf('p') !== -1 ){
+                        [result, dice] = c_roll(bonus,penal);
+                        opt = `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                    }
+                    else {
+                        [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
+                        opt += TestText(test);
+                        opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
+                        SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
+                    }
                     send = true;
                 } catch (error) {
                     console.error({
@@ -201,7 +194,7 @@ client.on('message', msg => {
             //Warhammer roll
             case '/wr':
                 try {
-                    opt += war_roll();
+                    opt += war_roll(skill);
                     send = true;
                 } catch (error) {
                     console.err({
