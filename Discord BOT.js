@@ -30,21 +30,19 @@ const roll = (dice = 1, walls = 6) => {
     const result = [];
 
     if (dice > 1) {
-        for (let index = 0; index < dice; index++) {
+        for (let index = 0; index < dice; index++)
             result.push(Math.floor(Math.random() * walls) + 1);
-        }
         return `[ ${result.join(' , ')} ]   :arrow_forward:   ${result.reduce( (acc,val) => acc + val , 0 )}`;
     }
-    else {
+    else
         return `${Math.floor(Math.random() * walls) + 1}`;
-    }
 }
 
 const c_roll = (bonus = 0, penal = 0) => {
     const unit = Math.floor(Math.random() * 10) + 1, dec = [];
-    for (let i = 0 ; i <= Math.abs(bonus - penal) ; i++){
+    for (let i = 0 ; i <= Math.abs(bonus - penal) ; i++)
         dec.push((Math.floor(Math.random() * 10)) * 10 );
-    }
+
     switch ( (bonus - penal)/(Math.abs(bonus - penal)) ) {
         case 1:
             return [unit + Math.min(...dec), [unit, ...dec]];
@@ -87,9 +85,8 @@ const war_roll = (skill = '') => {
 
 const dnd_roll = (bonus = 0, mod = 0) => {
     const result = [Math.floor(Math.random() * 20) + 1];
-    for (let index = 1; index <= bonus; index++) {
-        result.push(Math.floor(Math.random() * 20) + 1)
-    }
+    for (let index = 1; index <= bonus; index++)
+        result.push(Math.floor(Math.random() * 20) + 1);
     const modifcator = mod !== 0 ? (mod > 0 ? '+' : '') + mod : ''
 
     return `[ ${ result } ] ${modifcator}  :arrow_forward:   ${ result.filter(res => res === 1).length ? 1 : Math.max( ...result ) + parseInt(mod)}`;
@@ -226,14 +223,50 @@ client.on('message', msg => {
                     })
                 }
                 break;
-            //Hide Roll
-            case '/htr':
+            //Hide Cthulhu Roll
+            case '/hcr':
                 try {
                     [ test , result, dice ] = test_roll(skill, bonus, penal, mod);
                     opt += TestText(test);
                     opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
                     client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
                     SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
+                break;
+            //Hide D&D Roll
+            case '/hdr':
+                try {
+                    opt += dnd_roll(bonus, skill);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
+                break;
+            //Hide Warhammer Roll
+            case '/hwr':
+                try {
+                    opt += war_roll(skill);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
+                } catch (error) {
+                    console.error({
+                        error: error,
+                        msg: question
+                    })
+                }
+                break;
+            //Hide Tales Roll
+            case '/htr':
+                try {
+                    opt += tales_roll(skill);
+                    client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG)).send(`${msg.author} ${opt}`);
                 } catch (error) {
                     console.error({
                         error: error,
