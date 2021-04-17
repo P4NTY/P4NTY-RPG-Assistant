@@ -3,9 +3,17 @@ Discord Bot for Pen &amp; Paper rolling
 
 Normal roll: 
   -
- -  /r [dices]k[walls]
- -  input:  /r 2k6
- -  output: [ 5 , 1 ]   :arrow_forward:   6 
+  - Normal: 
+    - /r [dices]k[walls]
+    - input  /r 3k6
+    - output [ (5,1,4) ]   :arrow_forward:   10
+  - Math roll:
+    - /r `math euqal with dice as variable`
+    - input: /r 3k6 *5
+    - output: [ (3,4,3) * 5 ]   :arrow_forward:   50
+    or
+    - input: /r 3k6 + 1k4
+    - output: [ (1,3,1) + (1) ]   :arrow_forward:   6
 
 Call of Cthulhu:
   -
