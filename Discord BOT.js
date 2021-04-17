@@ -4,7 +4,6 @@ const client = new Discord.Client();
 //Airtable connection
 const Airtable = require('airtable');
 const SessionBase = new Airtable({apiKey: 'TOKEN_2'}).base('appZVNPER2qH6vdnJ');
-const SkillBase = new Airtable({apiKey: 'TOKEN_2'}).base('app5rtOzZ8X6ee5hU');
 
 const MG = {};
 
@@ -28,21 +27,19 @@ const MapMod = [
 
 const roll = (dice = 1, walls = 6) => {
     const result = [];
-
     if (dice > 1) {
         for (let index = 0; index < dice; index++)
             result.push(Math.floor(Math.random() * walls) + 1);
-        return `[ ${result.join(' , ')} ]   :arrow_forward:   ${result.reduce( (acc,val) => acc + val , 0 )}`;
+        return [result.reduce( (acc,val) => acc + val , 0 ), result];
     }
     else
-        return `${Math.floor(Math.random() * walls) + 1}`;
+        return [Math.floor(Math.random() * walls) + 1];
 }
 
 const c_roll = (bonus = 0, penal = 0) => {
     const unit = Math.floor(Math.random() * 10) + 1, dec = [];
     for (let i = 0 ; i <= Math.abs(bonus - penal) ; i++)
         dec.push((Math.floor(Math.random() * 10)) * 10 );
-
     switch ( (bonus - penal)/(Math.abs(bonus - penal)) ) {
         case 1:
             return [unit + Math.min(...dec), [unit, ...dec]];
@@ -56,7 +53,6 @@ const c_roll = (bonus = 0, penal = 0) => {
 const test_roll = (skill, bonus = 0, penal = 0, mod = 1) => {
     const [rolling, result] = c_roll(bonus, penal);
     let counter = 0;
-
     if ( (rolling >= 96 && skill < 50) || rolling === 100 ) counter = -2;
     else if ( rolling === 1 ) counter = 3;
     else if ((skill/mod) < rolling) counter = -1;
@@ -77,19 +73,33 @@ const tales_roll = (dice) => {
     return `[ ${ result.join(' , ') } ]  :arrow_forward:   ${ result.filter( res => res === 6 ).length}`;
 }
 
-const war_roll = (skill = '') => {
+const war_roll = (skill = '', mod = 0) => {
     const unit = Math.floor(Math.random() * 10) + 1;
     const dec = Math.floor(Math.random() * 10) * 10;
-    return `${skill !== '' ? TestText( parseInt( (skill-dec)/10 ) - 1 ) : ''} [ ${dec}, ${unit} ]   :arrow_forward:   ${dec + unit}`;
+    const modifcator = mod !== 0 ? (mod > 0 ? '+' : '') + mod : ''
+    return `${skill !== '' ? TestText( parseInt(skill/10)-parseInt(dec/10)-parseInt((unit+mod)/10) - 1 ) : ''} [ ${dec}, ${unit} ] ${modifcator}   :arrow_forward:   ${dec + unit + mod}`;
 }
 
-const dnd_roll = (bonus = 0, mod = 0) => {
+const dnd_roll = (bonus = 0, penal = 0, mod = 0) => {
     const result = [Math.floor(Math.random() * 20) + 1];
-    for (let index = 1; index <= bonus; index++)
-        result.push(Math.floor(Math.random() * 20) + 1);
-    const modifcator = mod !== 0 ? (mod > 0 ? '+' : '') + mod : ''
+    for (let index = 0; index < bonus; index++) result.push(Math.floor(Math.random() * 20) + 1);
+    const modifcator = mod !== 0 ? (mod > 0 ? '+' : '') + mod : '';
 
-    return `[ ${ result } ] ${modifcator}  :arrow_forward:   ${ result.filter(res => res === 1).length ? 1 : Math.max( ...result ) + parseInt(mod)}`;
+    let opt = `[ ${ result } ] ${modifcator}  :arrow_forward:   `;
+    if (result[0] === 1) return `[ ${ result } ] ${modifcator}  :arrow_forward:   1`;
+    switch ( (bonus - penal)/(Math.abs(bonus - penal)) ) {
+        case 1:
+            opt += `${Math.max(...result) + mod}`;
+            break;
+        case -1:
+            opt += `${Math.min(...result) + mod}`;
+            break;
+        default:
+            opt += `${result[0] + mod}`;
+            break;
+    }
+
+    return opt;
 }
 
 // client.on('ready', () => {  });
@@ -108,7 +118,7 @@ const SaveRoll = (user, result, isSuccess, comment, isBonus) => {
     ],()=>{});
 }
 
-const help = () => `https://github.com/P4NTY/P4NTY-RPG-Assistant`;
+const help = `https://github.com/P4NTY/P4NTY-RPG-Assistant`;
 
 const TestText = (test) => {
     if ( test <= -1 ) {
@@ -144,10 +154,9 @@ client.on('message', msg => {
     const question = msg.content.split(' ');
     const option = question[0].toLocaleLowerCase();
     if (option[0] === '/'){
-        const [dices, walls] = [...question, '0k0'].filter(x=> x.indexOf('k') !== -1)[0].split('k');
         const mod = [...question, '1/1'].filter(x=> x.indexOf('/') !== -1)[1].split('/')[1];
         const skill = question.filter(x=> !isNaN(parseInt(x)))[0];
-        const comment = msg.content.split('`')[1]||' ';
+        const comment = msg.content.split('`')[1]||'';
         const bonus = [...question, '0b'].map(x => x.toString().match(/[0-9]b/g)).filter(x => x)[0].toString().slice(0, -1);
         const penal = [...question, '0p'].map(x => x.toString().match(/[0-9]p/g)).filter(x => x)[0].toString().slice(0, -1);
         let opt = ``;
@@ -157,7 +166,22 @@ client.on('message', msg => {
             //Roll
             case '/r':
                 try {
-                    opt = roll( dices , walls );
+                    const query = [];
+                    let count = '';
+                    question.filter(x => x.indexOf('/') !== 0 && x.indexOf('`') === -1).join('').split('').filter(x => x !== ' ').forEach(x => {
+                        switch(x){
+                            case '+': case '-': case '*': case '/':
+                                query.push(count,x);
+                                count = '';
+                                break;
+                            default:
+                                count += x;
+                                break;
+                        }
+                    })
+                    query.push(count);
+                    const result = query.map( num => num.indexOf('k') !== -1 ? roll(num.split('k')[0],num.split('k')[1])[0] : num );
+                    opt = `[ ${result.join(' ')} ]   :arrow_forward:   ${eval(result.join(''))}`;
                     send = true;
                 } catch (error) {
                     console.error({
@@ -214,7 +238,7 @@ client.on('message', msg => {
             //Dungeons and Dragons roll
             case '/dr':
                 try {
-                    opt += dnd_roll(bonus, skill);
+                    opt += dnd_roll(bonus, penal, skill);
                     send = true;
                 } catch (error) {
                     console.err({
@@ -241,7 +265,7 @@ client.on('message', msg => {
             //Hide D&D Roll
             case '/hdr':
                 try {
-                    opt += dnd_roll(bonus, skill);
+                    opt += dnd_roll(bonus, penal, skill);
                     client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
                     console.error({
@@ -293,7 +317,7 @@ client.on('message', msg => {
                 break;
             //Help!
             case '/pomocy!':
-                opt = help();
+                opt = help;
                 send = true;
                 break;
             //Kiedy?
