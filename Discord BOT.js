@@ -4,7 +4,6 @@ const client = new Discord.Client();
 //Airtable connection
 const Airtable = require('airtable');
 const SessionBase = new Airtable({apiKey: 'TOKEN_2'}).base('appZVNPER2qH6vdnJ');
-
 const MG = {};
 
 const MapMod = [
@@ -180,10 +179,18 @@ client.on('message', msg => {
                         }
                     })
                     query.push(count);
-                    const result = query.map( num => num.indexOf('k') !== -1 ? roll(num.split('k')[0],num.split('k')[1])[0] : num );
-                    opt = `[ ${result.join(' ')} ]   :arrow_forward:   ${eval(result.join(''))}`;
+                    const result = query.map( num => num.indexOf('k') !== -1 ? roll(num.split('k')[0],num.split('k')[1]) : num );
+                    opt = `[ ${result.map(word => {
+                        if(typeof word === 'object') return '(' + (word[1] || word[0]) + ')'
+                        else return word
+                    }).join(' ')} ]   :arrow_forward:   ${eval(result.map(word => {
+                        if(typeof word === 'object') return word[0]
+                        else return word
+                    }).join(''))}`;
                     send = true;
                 } catch (error) {
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
                     console.error({
                         error: error,
                         msg: question
@@ -205,6 +212,8 @@ client.on('message', msg => {
                     }
                     send = true;
                 } catch (error) {
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
                     console.error({
                         error: error,
                         msg: question
@@ -217,7 +226,9 @@ client.on('message', msg => {
                     opt += war_roll(skill);
                     send = true;
                 } catch (error) {
-                    console.err({
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
+                    console.error({
                         error: error,
                         msg: question
                     })
@@ -229,7 +240,9 @@ client.on('message', msg => {
                     opt += tales_roll(skill);
                     send = true;
                 } catch (error) {
-                    console.err({
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
+                    console.error({
                         error: error,
                         msg: question
                     })
@@ -241,7 +254,9 @@ client.on('message', msg => {
                     opt += dnd_roll(bonus, penal, skill);
                     send = true;
                 } catch (error) {
-                    console.err({
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
+                    console.error({
                         error: error,
                         msg: question
                     })
@@ -256,6 +271,8 @@ client.on('message', msg => {
                     client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                     SaveRoll(msg.author.username, result, test >= 0, comment, parseInt(bonus) !== 0);
                 } catch (error) {
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
                     console.error({
                         error: error,
                         msg: question
@@ -268,6 +285,8 @@ client.on('message', msg => {
                     opt += dnd_roll(bonus, penal, skill);
                     client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
                     console.error({
                         error: error,
                         msg: question
@@ -280,6 +299,8 @@ client.on('message', msg => {
                     opt += war_roll(skill);
                     client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
                     console.error({
                         error: error,
                         msg: question
@@ -292,6 +313,8 @@ client.on('message', msg => {
                     opt += tales_roll(skill);
                     client.users.cache.get(client.users.cache.findKey( x => x.username ===  MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
                 } catch (error) {
+                    opt = 'Niestety coś poszło nie tak :(';
+                    send = true;
                     console.error({
                         error: error,
                         msg: question
