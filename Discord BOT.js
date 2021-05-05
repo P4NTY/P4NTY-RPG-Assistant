@@ -1,9 +1,10 @@
 //Discord connection
-const Discord = require('discord.js');
-const client = new Discord.Client();
-//Airtable connection
-const Airtable = require('airtable');
-const SessionBase = new Airtable({apiKey: 'TOKEN_2'}).base('appZVNPER2qH6vdnJ');
+const { Client } = require('discord.js');
+const client = new Client();
+//rolls functions
+const { roll, c_roll, test_roll, tales_roll, war_roll, dnd_roll } = require("./roll");
+//functions
+const { SaveRoll, Help, TestText, When, Notification, Settings, fnError, ManageServer } = require('./bot-funcs');
 
 const MG = {};
 
