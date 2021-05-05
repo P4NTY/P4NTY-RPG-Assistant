@@ -66,6 +66,8 @@ Tales from the Loop
 
 Other command:
 -
+  - /setNofify - set Notification channel and register your guild
   - /setMG `Kiszu` - set Game Master for channel
-  - /pomocy! - paste link to this Readme
-  - /kiedy? - return next session info
+  - /pomocy! || '/help!' - paste link to this Readme
+  - /kiedy? || '/when?' - return next session info
+  - /stats - check guild's settings
