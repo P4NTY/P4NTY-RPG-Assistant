@@ -1,10 +1,11 @@
-//Discord connection
 const { Client } = require('discord.js');
 const client = new Client();
 //rolls functions
-const { roll, c_roll, test_roll, tales_roll, war_roll, dnd_roll } = require("./roll");
+const { roll, c_roll, test_roll, tales_roll, war_roll, dnd_roll, fate_tf_roll, tf_roll } = require("./roll");
 //functions
 const { SaveRoll, Help, TestText, When, Notification, Settings, fnError, ManageServer } = require('./bot-funcs');
+//rolls api
+const api = 'https://rpg-assistant.herokuapp.com/roll';
 
 const MG = {};
 
@@ -26,28 +27,21 @@ client.on('message', msg => {
             //Roll
             case '/r':
                 try {
-                    const query = [];
-                    let count = '';
-                    question.filter(x => x.indexOf('/') !== 0 && x.indexOf('`') === -1).join('').split('').filter(x => x !== ' ').forEach(x => {
-                        switch (x) {
-                            case '+': case '-': case '*': case '/': case '(': case ')':
-                                query.push(count, x);
-                                count = '';
-                                break;
-                            default:
-                                count += x;
-                                break;
+                    let query = question.slice(1).join('');
+                    let stop = false;
+                    do {
+                        if (query.match(/\d+k(\d+|f|c)/) === null ) stop = true;
+                        else {
+                            const thro = query.match(/\d+k(\d+|f|c)/)[0];
+                            switch (thro.split('k')[1]) {
+                                case 'f': query = query.replace(thro, '('+fate_tf_roll(thro.split('k')[0])[0]+')'); break;
+                                case 'c': query = query.replace(thro, '('+tf_roll(thro.split('k')[0])[0]+')'); break;
+                                default: query = query.replace(thro, '('+roll(thro.split('k')[0],thro.split('k')[1])[0]+')'); break;
+                            }
                         }
-                    })
-                    query.push(count);
-                    const result = query.map(num => num.indexOf('k') !== -1 ? roll(num.split('k')[0], num.split('k')[1]) : num);
-                    opt = `[ ${result.map(word => {
-                        if(typeof word === 'object') return '(' + (word[1] || word[0]) + ')'
-                        else return word
-                    }).join(' ')} ]   :arrow_forward:   ${eval(result.map(word => {
-                        if(typeof word === 'object') return word[1]
-                        else return word
-                    }).join(''))}`;
+                    } while(!stop);
+                    result = query.replace(/,/g,'+');
+                    opt = `[ ${result} ]   :arrow_forward:   ${eval(result)}`;
                     send = true;
                 } catch (error) {
                     send = true;
@@ -64,7 +58,7 @@ client.on('message', msg => {
                         [test, result, dice] = test_roll(skill, bonus, penal, mod);
                         opt += TestText(test);
                         opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
-                        SaveRoll(msg.author.username,result,comment, msg.author.lastMessageChannelID,option,test >= 0,parseInt(bonus) !== 0);
+                        SaveRoll(msg.author.username,result,comment, msg.guild.id,option,test >= 0,parseInt(bonus) !== 0);
                     }
                     send = true;
                 } catch (error) {
@@ -75,8 +69,9 @@ client.on('message', msg => {
                 //Warhammer roll
             case '/wr':
                 try {
-                    const [dices, result] = war_roll(skill);
-                    opt += `[ ${dices.join(' , ')} ]    :arrow_forward:   ${result}`;
+                    const [dices, mod, result] = war_roll(skill);
+                    opt += `[ ${dices.join(' , ')} ] ${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : '' }    :arrow_forward:   ${result}`;
+                    SaveRoll(msg.author.username,result,comment, msg.guild.id, option);
                     send = true;
                 } catch (error) {
                     send = true;
@@ -88,6 +83,7 @@ client.on('message', msg => {
                 try {
                     const [dices, result] = tales_roll(skill);
                     opt += `[ ${dices} ]  :arrow_forward:   ${result}`;
+                    SaveRoll(msg.author.username,result,comment, msg.guild.id, option);
                     send = true;
                 } catch (error) {
                     send = true;
@@ -98,7 +94,8 @@ client.on('message', msg => {
             case '/dr':
                 try {
                     const [dices, mod, result] = dnd_roll(bonus, penal, skill);
-                    opt += `[ ${ dices } ] ${mod !== 0 ? mod : '' }  :arrow_forward:   ${result}`;
+                    opt += `[ ${ dices } ] ${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : '' }  :arrow_forward:   ${result}`;
+                    SaveRoll(msg.author.username,result,comment, msg.guild.id, option);
                     send = true;
                 } catch (error) {
                     send = true;
@@ -112,7 +109,7 @@ client.on('message', msg => {
                     opt += TestText(test);
                     opt += `[ ${dice.join(' , ')} ]   :arrow_forward:   ${result}`;
                     client.users.cache.get(client.users.cache.findKey(x => x.username === MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
-                    SaveRoll(msg.author.username, result,comment,msg.author.lastMessageChannelID,option,test >= 0,parseInt(bonus) !== 0);
+                    SaveRoll(msg.author.username, result,comment,msg.guild.id,option,test >= 0,parseInt(bonus) !== 0);
                 } catch (error) {
                     send = true;
                     opt = fnError(error, question);
@@ -122,8 +119,9 @@ client.on('message', msg => {
             case '/hdr':
                 try {
                     const [dices, mod, result] = dnd_roll(bonus, penal, skill);
-                    opt += `[ ${ dices } ] ${mod !== 0 ? mod : '' }  :arrow_forward:   ${result}`;
+                    opt += `[ ${ dices } ] ${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : '' }  :arrow_forward:   ${result}`;
                     client.users.cache.get(client.users.cache.findKey(x => x.username === MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
+                    SaveRoll(msg.author.username,result,comment, msg.guild.id, option);
                 } catch (error) {
                     send = true;
                     opt = fnError(error, question);
@@ -132,9 +130,10 @@ client.on('message', msg => {
                 //Hide Warhammer Roll
             case '/hwr':
                 try {
-                    const [dices, result] = war_roll(skill);
-                    opt += `[ ${dices.join(' , ')} ]    :arrow_forward:   ${result}`;
+                    const [dices, mod, result] = war_roll(skill);
+                    opt += `[ ${dices.join(' , ')} ] ${mod !== 0 ? (mod > 0 ? '+'+mod : mod) : '' }   :arrow_forward:   ${result}`;
                     client.users.cache.get(client.users.cache.findKey(x => x.username === MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
+                    SaveRoll(msg.author.username,result,comment, msg.guild.id, option);
                 } catch (error) {
                     send = true;
                     opt = fnError(error, question);
@@ -146,6 +145,7 @@ client.on('message', msg => {
                     const [dices, result] = tales_roll(skill);
                     opt += `[ ${dices} ]  :arrow_forward:   ${result}`;
                     client.users.cache.get(client.users.cache.findKey(x => x.username === MG[msg.author.lastMessageChannelID])).send(`${msg.author} ${opt}`);
+                    SaveRoll(msg.author.username,result,comment, msg.guild.id, option);
                 } catch (error) {
                     send = true;
                     opt = fnError(error, question);
@@ -165,7 +165,7 @@ client.on('message', msg => {
                     opt = fnError(error, question);
                 }
                 break;
-            case '/setnofify':
+            case '/setnotify':
                 ManageServer(msg, MG);
                 break;
                 //Help!
@@ -189,9 +189,10 @@ client.on('message', msg => {
 });
 
 // client.on('ready', () => {});
+
 const timer = () => (
     setTimeout(() => {
-        if (new Date().getHours() === notifyTime[0] && new Date().getMinutes() === notifyTime[1]) Notification();
+        if (new Date().getHours() === notifyTime[0] && new Date().getMinutes() === notifyTime[1]) Notification(client);
         timer();
     }, 60000)
 );
