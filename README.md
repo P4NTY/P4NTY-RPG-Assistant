@@ -1,6 +1,8 @@
 # RPG-Assistant
 Discord Bot for Pen &amp; Paper rolling.  **One bot for youe all rolls*  **
 
+LINK: https://discord.com/api/oauth2/authorize?client_id=726793068908642314&permissions=294205278208&scope=bot
+
 Supports specyfic rolls from these systems:
 - Call of Cthulhu 7ed
 - Warhammer 4ed
@@ -41,5 +43,5 @@ Supports specyfic rolls from these systems:
 ![Vampire](https://github.com/P4NTY/P4NTY-RPG-Assistant/blob/main/pic/vr.png?raw=true "Vampire")
 
 ---
-### Support :fa-thumbs-o-up:
+### Support
 if you want support this bot? https://www.buymeacoffee.com/kiszu
