@@ -1,5 +1,5 @@
 const Airtable = require('airtable');
-const RPGBase = new Airtable({apiKey:'key5qcpujPme4ulde'}).base('appuUzNCgIL1z6gRk');
+const RPGBase = new Airtable({apiKey:''}).base('');
 //Discord connection
 const { MessageEmbed } = require('discord.js');
 const { response } = require('express');
