@@ -78,7 +78,7 @@ const fate_tf_roll = (dice = 1) => {
 
 const vampire_roll = (pool, hunger ) => {
     const dices_pool = roll(pool,10)[0];
-    const dices_hunger = roll(hunger,10)[0];
+    const dices_hunger = hunger ? roll(hunger,10)[0] : [];
     const critic = ([ ...dices_pool, ...dices_hunger  ].filter( value => value === 10 ).length - ([ ...dices_pool, ...dices_hunger  ].filter( value => value === 10 ).length%2));
 
     return [
@@ -90,6 +90,7 @@ const vampire_roll = (pool, hunger ) => {
         dices_hunger
     ];
 }
+const cult_roll = () => roll(2,10);
 
 const getResolve = (msg) => {
     let stop = false;
@@ -108,4 +109,4 @@ const getResolve = (msg) => {
     return msg.replace(/,/g,'+');
 }
 
-module.exports = { roll, c_roll, test_roll, tales_roll, war_roll, dnd_roll, tf_roll, fate_tf_roll, getResolve, vampire_roll };
+module.exports = { roll, c_roll, test_roll, tales_roll, war_roll, dnd_roll, tf_roll, fate_tf_roll, getResolve, vampire_roll, cult_roll };

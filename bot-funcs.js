@@ -1,28 +1,10 @@
-const Airtable = require('airtable');
-const RPGBase = new Airtable({apiKey:''}).base('');
-//Discord connection
-const { MessageEmbed } = require('discord.js');
-const { response } = require('express');
-const fetch = require("node-fetch");
-
-const MapMod = [{
-    name: 'Hard',
-    short: '1/2',
-    value: 2
-},
-{
-    name: 'Extreme',
-    short: '1/5',
-    value: 3
-},
-{
-    name: 'Critical',
-    short: '1/100',
-    value: 4
-}];
+//rolls functions
+const { test_roll, tales_roll, war_roll, dnd_roll, fate_tf_roll, getResolve, vampire_roll, cult_roll } = require("./roll");
+//commands
+const { rollsInfo } = require("./commands");
 
 const MapNumber = {
-    '-': ':name_badge:',
+    '-': ':no_entry:',
     '0': ':zero:',
     '1': ':one:',
     '2': ':two:',
@@ -37,225 +19,272 @@ const MapNumber = {
 
 const changeNumber = (value) => value.toString().split('').map( char => MapNumber[char]||'').join('');
 
-//Session Embed Message temlpate
-const SesionInfoEmbed = (title, name, data, mg) => (
-    new MessageEmbed()
-        .setTitle(`${title}: ${name}`)
-        .setColor(0xe75480)
-        .setDescription([
-            `Dzień? ${new Date(data).toLocaleDateString('pl-PL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`,
-            `Godzina? ${data.split('T')[1].slice(0,5)}`,
-            '',
-            `MG: ${mg}`,
-            '',
-            `Dodaj sesję: https://airtable.com/shr94r4Rp8FgftniJ`,
-            `Kalendarz: https://airtable.com/shr2VxE9sbc9xUb7w`
-        ].join('\n'))
-);
+const cthulhu = (embed,option) => {
+	const skill = option.getInteger('skill');
+	const bonus = option.getInteger('bonus')||0;
+	const penalty = option.getInteger('penalty')||0;
+	const [test, result, dice] = test_roll(skill, bonus, penalty);
+	const comment = option.getString('comment')||'';
 
-//Send roll to data base
-const SaveRoll = (user,result, comment, guild, command='', isSuccess=false, isBonus=false) => {
-    RPGBase('Places').select({
-        fields: ["Name"],
-        filterByFormula: `ID = '${guild}'`,
-        maxRecords: 1,
-    }).eachPage((records) => {
-        RPGBase('Rolls').create([{
-            "fields": {
-                "Who":user,
-                "Roll":result,
-                "Comment": comment,
-                "Date": new Date(),
-                "Place": [records[0].id],
-                "isSuccess?": isSuccess,
-                "isBonus?": isBonus,
-                "command": command
-            }
-        }])
-    })
+	let title = '';
+	
+	[()=>{
+		embed.setColor('#ff033e');
+		title = ':anger: Critical Fail';
+	},
+	()=>{
+		embed.setColor('#b6002a');
+		title = ':x: Fail';
+	},
+	()=>{
+		embed.setColor('#47b300');
+		title = ':green_square: Success';
+	},
+	()=>{
+		embed.setColor('#52cc00');
+		title = ':white_check_mark: Hard Success';
+	},
+	()=>{
+		embed.setColor('#5ce600');
+		title = ':sparkle: Extreme Success';
+	},
+	()=>{
+		embed.setColor('#66ff00');
+		title = ':sparkler: Critical Success';
+	},][test]();
+
+	if (comment !== '') title += `- ${comment}`;
+
+	return embed
+		.setTitle( `${title}` )
+		.setFooter({text: 'Call of Cthulhu 7ed'})
+		.addFields(
+			{ name: `Result: ${changeNumber(result)} `, value: `Rolled: ${dice.join(' , ')}`, inline: true },
+			{ name: `Skill: ${option.getInteger('skill')||0}`, value: `Add dice: (${bonus}-${penalty})`, inline: true },
+		)
+}
+const tales = (embed,option) => {
+	const [dices, result] = tales_roll(option.getInteger('skill'));
+	const comment = option.getString('comment')||'';
+
+	if (comment !== '') embed.setTitle( `${comment}` );
+
+	return embed
+		.setFooter({text: 'Tales from the Loop'})
+		.setColor(result > 0 ? '#03bcff' : '#000000')
+		.addField(`Result: ${changeNumber(parseInt(result))} `, `Rolled: \` ${dices} \``)
+}
+const fate = (embed,option) => {
+	const [dices, result] = fate_tf_roll(4),
+		comment = option.getString('comment')||''
+		diff = option.getInteger('difficulty')||0,
+		skill = option.getInteger('skill')||0;
+	
+	if (comment !== '') embed.setTitle(`${comment}`);
+	
+	if ( result + skill > diff ) embed.setColor('#66ff00');
+	else if ( result + skill === diff ) embed.setColor('#000000');
+	else embed.setColor('#ff033e');
+
+	return embed
+		.setFooter({text: 'Fate'})
+		.addFields(
+			{ name: `Result: ${changeNumber(result + skill - diff)} `, value: `Rolled: ${dices.join(' ')}`, inline: true },
+			{ name: `Skill: ${skill||0}`, value: `Difficulty: ${diff}`, inline: true },
+		)
+}
+const warhammer = (embed,option) => {
+	const [count,critic, dices, result] = war_roll(option.getInteger('skill'),option.getInteger('modifier'));
+	const comment = option.getString('comment')||'';
+	let title = count + ' ';
+	
+	[()=>{
+		embed.setColor('#ff033e');
+		title += ':anger: Critical Fail ';
+	},
+	()=>{
+		 if (result <= ( option.getInteger('skill') + option.getInteger('modifier')||0 ) ) {
+			embed.setColor('#47b300');
+			title += ':white_check_mark: Success ';
+		}
+		else {
+			embed.setColor('#b6002a');
+			title += ':x: Fail ';
+		}
+	},
+	()=>{
+		embed.setColor('#66ff00');
+		title += ':sparkler: Critical Success ';
+	}][critic+1]();
+
+	if (comment !== '') title += ` - ${comment}`;
+	return embed
+		.setFooter({text: 'Warhammer 4ed'})
+		.setTitle( title )
+		.addFields(
+			{ name: `Result: ${changeNumber(result)} `, value: `Rolled: \` ${dices} \``, inline: true },
+			{ name: `Skill: ${option.getInteger('skill')}`, value: `Mod: ${option.getInteger('modifier')||0}`, inline: true },
+		)
+}
+const dnd = (embed, option) => {
+	const result = dnd_roll();
+	const mod = option.getInteger('modifier')||'';
+	// const difficulty = option.getInteger('difficulty')||'';
+	const comment = option.getString('comment')||'';
+	let title = '';
+	switch (result) {
+		case 20:
+			title = ':sparkler: Natural :two::zero: ';
+			embed.setColor('#66ff00');
+			break;
+		case 1:
+			title = ':anger: Fail :game_die: ';
+			embed.setColor('#ff033e');
+			break;
+		default:
+			embed.setColor('#03bcff');
+			break;
+	}
+	if (comment !== '') title += ` - ${comment}`;
+
+	return embed
+		.setFooter({text: 'Dungeons and Dragons 5ed'})
+		.setTitle( title )
+		.addFields(
+			{ name: `Result: ${changeNumber(parseInt(result) + parseInt(mod||0))} `, value: `Rolled: ${result}`, inline: true },
+			{ name: `\u200B`, value: `Mod: ${mod||0}`, inline: true },
+		)
 }
 
-//Help Embed Message
-const Help = (reset = false) => (
-    new MessageEmbed()
-        .setTitle(`Pomocnik ${reset ? '- upDate!' : ''}`)
-        .setColor(0xe75480)
-        .setDescription([
-            `${reset ? 'Brak Mistrza Gry na kanale' : ''}`,
-            `Ustaw Mistrza Gry: /setMG \`Kiszu\` !`,
-            '',
-            `Podstawowe rzuty:`,
-            `    /r 1k3 + 2k4 \`komentarz\``,
-            `    /cr - Call of Cthulhu`,
-            `    /dr - Dungeon & Dragons`,
-            `    /wr - Warhammer`,
-            `    /tr - Tales from the Loop`,
-            '',
-            `Więcej: https://github.com/P4NTY/P4NTY-RPG-Assistant`
-        ].join('\n'))
-);
-
-
-const TestText = (test) => {
-    if (test === -2) `:anger: Critical Fail    `
-    else if (test === -1) return `:x: Fail    `;
-    else {
-        return `(+${test + 1}) :white_check_mark: ${MapMod.map( x => x.value).indexOf(test + 1) !== -1
-            ? MapMod[MapMod.map( x => x.value).indexOf(test + 1)].name: ''} Sukcess   `;
-    }
+const simple_roll = (embed,option) => {
+	const result = getResolve(option.getString('command'));
+	const comment = option.getString('comment')||'';
+	if (comment !== '') embed.setTitle(`${comment}`);
+	return embed.setColor('#03bcff')
+		.setFooter({text: 'Own roll'})
+		.addField(`Result: ${changeNumber(eval(result))} `, `Rolled: \` ${result.split('').join(' ')} \``);
 }
 
-//When next session Embed Message
-const When = (msg) => {
-    RPGBase('Places').select({
-        view: "Grid view",
-        fields: ["Name"],
-        filterByFormula: `ID = ${msg.guild.id}`,
-        maxRecords: 1,
-    }).eachPage(records => {
-        if (records.length) {
-            RPGBase('Sessions').select({
-                maxRecords: 1,
-                view: "Grid view",
-                filterByFormula:`AND(DATESTR(DATEADD(TODAY(),0,'days')) <= DATESTR(Day),Where = '${records[0].get('Name')}')`
-            }).eachPage(recs => {
-                if (recs.length){
-                    msg.reply(
-                        SesionInfoEmbed(
-                            'Następna sesja',
-                            recs[0].get('Name'),
-                            recs[0].get('Day'),
-                            recs[0].get('Player (from MG)'),
-                    ))
-                }
-                else msg.reply( 'Brak kolejnej sesji' );
-            })
-        }
-        else msg.reply( 'Nie mogliśmy znaleźć serwera' );
-    })
+const vampire = (embed,option) => {
+	const symbols = (value, color) => {
+		if ( color === 'black') {
+			if (value == 10 ) return '<:vampire10black:980948486579183656>';
+			else if (value > 5) return '<:vampireblack:980948486738550795>';
+			else return '<:blackdot:980948486277181462>';
+		}
+		else {
+			if (value == 1) return '<:vampireskullred:980948486298161254>';
+			else if (value == 10) return '<:vampire10red:980948487363518464>';
+			else if (value > 5) return '<:vampirered:980948486570790922>';
+			else return '<:reddot:980948486247821375>';
+		}
+	}
+	const hunger = option.getInteger('hunger')||0,
+		pool = option.getInteger('pool') - hunger,
+		[blood, skull, critic, result,dices_pool,dices_hunger ] = vampire_roll(pool,hunger),
+		diff = option.getInteger('difficulty')||0,
+		answer = result >= diff ? (result >= diff) + (critic > 0) + (critic > 0 && blood > 0) : (skull > 0)*-1,
+		comment = option.getString('comment')||'';
+	let title = '';
+
+	[()=>{
+		title = ':thermometer: Bestial Failure';
+		embed.setColor('#b6002a');
+	},
+	()=>{
+		title = 'Failure';
+		embed.setColor('#000000');
+	},
+	()=>{
+		title = 'Success';
+		embed.setColor('#47b300');
+	},
+	()=>{
+		title = 'Success Critic';
+		embed.setColor('#66ff00');
+	},
+	()=>{
+		title = ':drop_of_blood: Messy Critical';
+		embed.setColor('#e90036');
+	}][answer + 1]();
+
+	if (comment !== '') title += ` - ${comment}`;
+
+	return embed
+		.setFooter({text: 'Vamipre 5ed'})
+		.setTitle( title )
+		.addFields(
+			{ name: `Result: ${changeNumber(result)} `, value: `Difficulty: ${diff}`, inline: true },
+			{ 
+				name: `Pool: ${dices_pool.map( value => symbols(value,'black') ).join('')}`,
+				value: `Hunger: ${dices_hunger.map( value => symbols(value,'red') ).join('')}`,
+				inline: true
+			},
+		)
 }
 
-//Auto notofication new Session Embed Message
-const Notification = (client) => {
-    RPGBase('Places').select({
-        fields: ["Name", "Notification ID"],
-        filterByFormula: `Type = 'Discord'`,
-    }).eachPage(records => {
-        const servers = [];
-        records.forEach( record => servers.push({
-            id: record.id,
-            name: record.get('Name'),
-            channel: record.get("Notification ID")
-        }) );
-        RPGBase('Sessions').select({
-            fields: ["Name", "Day",'Where','Player (from MG)','Hero (from Players)','Player (from Players)'],
-            filterByFormula:`AND(OR(DATESTR(DATEADD(TODAY(),1,'days')) = DATESTR(Day),DATESTR(TODAY()) = DATESTR(Day)),REGEX_MATCH('${servers.map( ({name}) => name).toString()}', Where))`
-        }).eachPage((recs, fetchNextPage) => {
-            try {
-                recs.forEach( rec => {
-                    client.channels.cache.get(servers.filter( ({id}) => id === rec.get('Where')[0] )[0].channel).send(
-                        SesionInfoEmbed(
-                            new Date(rec.get('Day')).toDateString() === new Date().toDateString() ? 'Dzisiaj Sesja!' : 'Jutro Sesja!',
-                            rec.get('Name'),
-                            rec.get('Day'),
-                            rec.get('Player (from MG)')
-                        )
-                    )
-                    client.channels.cache.get(servers.filter( ({id}) => id === rec.get('Where')[0] )[0].channel).send(
-                        client.channels.cache.get(servers.filter( ({id}) => id === rec.get('Where')[0] )[0].channel).members.filter( member =>
-                            [rec.get('Player (from MG)'),...rec.get('Player (from Players)')||[]].join('').indexOf(member.user.username) !== -1
-                        ).map( player => player).join(' ') + '    :arrow_heading_up:'
-                    );
-                });
-            } catch (error) {
-                console.log(error)
-            }
-            fetchNextPage();
-        }, err => console.log(err))
-    }, err => console.log(err))
+const cult = (embed,option) => {
+	const [dieces, result] = cult_roll(),
+		comment = option.getString('comment')||'',
+		modifier = option.getInteger('modifier')||0,
+		skill = option.getInteger('skill')||0;
+
+	let title = '';
+	if ( result + skill + modifier >= 15 ) {
+		title = 'Success';
+		embed.setColor('#47b300');
+	}
+	else if ( result + skill + modifier >= 9 ) {
+		title = 'Success with consequence';
+		embed.setColor('#FFA500');
+	}
+	else {
+		title = 'Failure';
+		embed.setColor('#e90036');
+	}
+
+	if (comment !== '') title += ` - ${comment}`;
+
+	return embed
+		.setFooter({text: 'Cult'})
+		.setTitle( title )
+		.addFields(
+			{ name: `Result: ${result + skill + modifier} `, value: `Rolled: ${dieces}`, inline: true },
+			{ name: `Skill: ${skill}`, value: `Mod: ${modifier}`, inline: true },
+		)
 }
 
-//Settings Embed Message
-const Settings = (msg, MG) => {
-    RPGBase('Places').select({
-        filterByFormula: `ID = ${msg.guild.id}`,
-        maxRecords: 1
-    }).eachPage( (records)=>{
-        if (records.length) {
-            records.forEach( record => {
-                msg.reply(
-                    new MessageEmbed()
-                        .setTitle( msg.guild.name + ': Ustawienia')
-                        .setColor(0xe75480)
-                        .setDescription([
-                            `Server ID: ${msg.guild.id}`,
-                            `Notification channel: ${msg.channel.guild.channels.cache.find(channel => channel.id === record.get('Notification ID')).name||'Brak'}`,
-                            `MG: ${msg.channel.guild.channels.cache.map( ({id,name}) => typeof MG[id] !== 'undefined' ? `[ ${name}: ${MG[id]} ]` : '' ).join('')||'Brak'}`
-                        ].join('\n'))
-                )
-            })
-        } else msg.reply( 'Brak serwera o takiej nazwie' )
-    }, err => console.log(err));
+const help = (embed) => {
+	const fields = rollsInfo().map( roll => {
+		return {
+			name: roll.name,
+			value: roll.expample,
+			inline: false
+		}
+	});
+
+	return embed
+		.addFields( ...fields )
+		.setAuthor({
+			name: 'ᖽᐸᓰSᗱᑘ',
+			iconURL: 'https://yt3.ggpht.com/ytc/AKedOLQnG6Ge0GAOdr-SwBmXyHL0D7dxdHdoh8ss-iYf=s88-c-k-c0x00ffffff-no-rj',
+			url: 'https://kiszu.pl/'
+		})
+		.setColor('#0099ff')
+		.setTitle('Hi!')
+		.setURL('https://kiszu.pl/RPG_assistant.html')
 }
 
-//Error funcion
-const fnError = (error, question) => {
-    console.error({
-        error: error,
-        msg: question
-    })
-    return 'Niestety coś poszło nie tak :(';
-}
+const supports = (embed) => embed
+	.setColor('#0099ff')
+	.setTitle('Hi, buy me a coffie!')
+	.setURL('https://www.buymeacoffee.com/kiszu')
+	.setAuthor({
+		name: 'ᖽᐸᓰSᗱᑘ',
+		iconURL: 'https://yt3.ggpht.com/ytc/AKedOLQnG6Ge0GAOdr-SwBmXyHL0D7dxdHdoh8ss-iYf=s88-c-k-c0x00ffffff-no-rj',
+		url: 'https://kiszu.pl/'
+	})
+	.setDescription('I\'m glad that, you want support this project!')
+	.setThumbnail('https://kiszu.pl/assets/img/portfolio/hand1.png')
 
-const ManageServer = (msg, MG) => {
-    RPGBase('Places').select({
-        filterByFormula: `ID = ${msg.guild.id}`,
-        maxRecords: 1
-    }).eachPage( records => {
-        if(records.length){
-            RPGBase('Places').update(records[0].id, {
-                "Notification ID": msg.author.lastMessageChannelID
-            }, (err) => {
-                if (err) console.error(new Error(err));
-                else Settings(msg, MG);
-            });
-        }
-        else {
-            RPGBase('Places').create([{
-                "fields": {
-                    "Name": msg.guild.name,
-                    "Type": "Discord",
-                    "ID": msg.guild.id,
-                    "Notification ID": msg.author.lastMessageChannelID
-                }
-            }], function( err ) {
-                if (err) console.error(err);
-                else Settings(msg, MG);
-            });
-        }
-    })
-}
-
-
-const Card = (whom, player, server) => {
-    const key=[3,7];
-    function fnCodeHash (string) {
-        return string.split('').map( char => (char.charCodeAt()-key[0])*key[1] ).map( ascii => String.fromCharCode(ascii)).join('')
-    }
-
-    fetch(`https://kiszu.pl/api/getCard.php?player=${player === 'ᖽᐸᓰSᗱᑘ' ? 'Kiszu' : player}`).then( res => res.json()).then( response => {
-        result = '';
-        
-        response.forEach(character => {
-            const data = JSON.stringify({
-                player: player === 'ᖽᐸᓰSᗱᑘ' ? 'Kiszu' : player.replace('%',''),
-                server: server,
-                character: character
-            })
-            result += new URL(`https://kiszu.pl/Card_Call/?id=${fnCodeHash(data)}`).href + '\n';
-        });
-        whom.send(result);
-    })
-}
-
-module.exports = { SesionInfoEmbed, SaveRoll, Help, TestText, When, Notification, Settings, fnError, ManageServer, Card, changeNumber };
+module.exports = { changeNumber,simple_roll,cthulhu,tales,fate,warhammer,dnd,vampire,supports,help, cult };

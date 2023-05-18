@@ -10,6 +10,7 @@ Supports specyfic rolls from these systems:
 - Fate
 - Dungeons and Dragons 5ed
 - Vamipire Masquerade 5ed
+- Cult
 
 ## Commands:
 ### Roll /r
@@ -41,6 +42,9 @@ Supports specyfic rolls from these systems:
 `/vr pool:10 difficult:2 hunger:4 comment:Vampire`
 
 ![Vampire](https://github.com/P4NTY/P4NTY-RPG-Assistant/blob/main/pic/vr.png?raw=true "Vampire")
+
+### Cult /c
+`/c skill: 2 modifier: -1 comment: Cult`
 
 ---
 ### Support
