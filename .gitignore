@@ -3,4 +3,5 @@ node_modules
 # bot-funcs.js
 pic
 .env
-ai.js
+# ai.js
+logs

@@ -4,7 +4,7 @@ function saveDataToFile(filename, data) {
 //   const filePath = path.join(__dirname, filename);
 
   try {
-    fs.writeFileSync('./'+filename, JSON.stringify(data));
+    fs.writeFileSync('./logs/'+filename, JSON.stringify(data));
     console.log('Data saved to file');
   } catch (error) {
     console.error(error);

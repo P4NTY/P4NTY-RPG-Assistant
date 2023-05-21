@@ -160,6 +160,7 @@ const simple_roll = (embed,option) => {
 	const result = getResolve(option.getString('command'));
 	const comment = option.getString('comment')||'';
 	if (comment !== '') embed.setTitle(`${comment}`);
+	// console.log(result)
 	return embed.setColor('#03bcff')
 		.setFooter({text: 'Own roll'})
 		.addField(`Result: ${changeNumber(eval(result))} `, `Rolled: \` ${result.split('').join(' ')} \``);
