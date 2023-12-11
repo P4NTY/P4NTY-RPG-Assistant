@@ -1,5 +1,5 @@
 //rolls functions
-const { test_roll, tales_roll, war_roll, dnd_roll, fate_tf_roll, getResolve, vampire_roll, cult_roll } = require("./roll");
+const { roll, test_roll, tales_roll, war_roll, dnd_roll, fate_tf_roll, getResolve, vampire_roll, cult_roll } = require("./roll");
 //commands
 const { rollsInfo } = require("./commands");
 
@@ -214,13 +214,11 @@ const vampire = (embed,option) => {
 	return embed
 		.setFooter({text: 'Vamipre 5ed'})
 		.setTitle( title )
+		.setDescription(
+			`${dices_pool.map( value => symbols(value,'black') ).join('')}${dices_hunger.map( value => symbols(value,'red') ).join('')}`
+		)
 		.addFields(
 			{ name: `Result: ${changeNumber(result)} `, value: `Difficulty: ${diff}`, inline: true },
-			{ 
-				name: `Pool: ${dices_pool.map( value => symbols(value,'black') ).join('')}`,
-				value: `Hunger: ${dices_hunger.map( value => symbols(value,'red') ).join('')}`,
-				inline: true
-			},
 		)
 }
 
@@ -253,6 +251,39 @@ const cult = (embed,option) => {
 			{ name: `Result: ${result + skill + modifier} `, value: `Rolled: ${dieces}`, inline: true },
 			{ name: `Skill: ${skill}`, value: `Mod: ${modifier}`, inline: true },
 		)
+}
+
+const glina = (embed,option) => {
+	const skill = option.getInteger('skill')||0,
+		comment = option.getString('comment')||'',
+		modifier = option.getInteger('modifier')||'';
+	
+	const result = roll( 1 , 6)[0][0];
+	const threshold = roll(2, 10)[0];
+
+	let title = '';
+	if ((result + skill + modifier) >= threshold[0] && (result + skill + modifier) >= threshold[1]) {
+		title += 'Triumf';
+		embed.setColor('#47b300');
+	}
+	else if ((result + skill + modifier) >= threshold[0] || (result + skill + modifier) >= threshold[1]) {
+		title += 'Fuks';
+		embed.setColor('#FFA500');
+	}
+	else {
+		title += 'Skucha';
+		embed.setColor('#e90036');
+	}
+	if ( threshold[0] === threshold[1] ) title += ' - Dublet';
+	if (comment !== '') title += ` - ${comment}`;
+	return embed
+		.setFooter({text: 'Glina'})
+		.setTitle( title )
+		.addFields(
+			{ name: `Result: ${result + skill + modifier} `, value: `Rolled: ${result}`, inline: true },
+			{ name: `Threshold: ${threshold}`, value: `Skill: ${skill}+${modifier}`, inline: true },
+		)
+
 }
 
 const help = (embed) => {
@@ -288,4 +319,4 @@ const supports = (embed) => embed
 	.setDescription('I\'m glad that, you want support this project!')
 	.setThumbnail('https://kiszu.pl/assets/img/portfolio/hand1.png')
 
-module.exports = { changeNumber,simple_roll,cthulhu,tales,fate,warhammer,dnd,vampire,supports,help, cult };
+module.exports = { changeNumber,simple_roll,cthulhu,tales,fate,warhammer,dnd,vampire,supports,help, cult, glina };

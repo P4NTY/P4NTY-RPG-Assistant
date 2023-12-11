@@ -170,6 +170,27 @@ const commands = [
 			),
 	},
 	{
+		name: 'Glina',
+		type: ['roll'],
+		expample: '/gr skill: 2 modifier: -1 comment: Glina'
+			+ '\u000A \u000A'
+			+ 'You\'ll roll 1d6 for skill and 2d10 for modifier',
+		command: new SlashCommandBuilder().setName('gr').setDescription('Glina')
+			.addIntegerOption( option =>
+				option.setName('skill')
+					.setDescription('Your skill')
+					.setRequired(true)
+			)
+			.addIntegerOption( option =>
+				option.setName('modifier')
+					.setDescription('The modifier of your throw?')
+			)
+			.addStringOption( option => 
+				option.setName('comment') 
+					.setDescription('Your comment')
+			),
+	},
+	{
 		name: 'Support',
 		type: ['info'],
 		command: new SlashCommandBuilder().setName('supports').setDescription('If you want support this !'),
@@ -179,15 +200,15 @@ const commands = [
 		type: ['info'],
 		command: new SlashCommandBuilder().setName('help').setDescription('I need the help !'),
 	},
-	{
-		name: 'Ai',
-		type: ['ai'],
-		command: new SlashCommandBuilder().setName('ai').setDescription('Zapytaj bota.')
-			.addStringOption( option => 
-				option.setName('prompt') 
-					.setDescription('Your prompt')
-			)
-	},
+	// {
+	// 	name: 'Ai',
+	// 	type: ['ai'],
+	// 	command: new SlashCommandBuilder().setName('ai').setDescription('Zapytaj bota.')
+	// 		.addStringOption( option => 
+	// 			option.setName('prompt') 
+	// 				.setDescription('Your prompt')
+	// 		)
+	// },
 ];
 
 // const commands = [].map(command => command.toJSON());

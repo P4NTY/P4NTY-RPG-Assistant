@@ -4,7 +4,7 @@ const { Client, Intents, MessageEmbed } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 //functions
-const { simple_roll,cthulhu,tales,fate,warhammer,dnd,vampire,supports,help,cult  } = require('./bot-funcs');
+const { simple_roll,cthulhu,tales,fate,warhammer,dnd,vampire,supports,help,cult,glina } = require('./bot-funcs');
 const { saveDataToFile } = require('./utils')
 const { aiQuest } = require('./ai')
 //commands
@@ -46,25 +46,27 @@ client.on('interactionCreate', async interaction => {
 			case 'dnd': await interaction.reply({ embeds: [dnd(embed,options)] }); break;
 			case 'vr': await interaction.reply({ embeds: [vampire(embed,options)] }); break;
 			case 'c': await interaction.reply({ embeds: [cult(embed,options)] }); break;
+			case 'gr': await interaction.reply({ embeds: [glina(embed,options)] }); break;
 			/** Others */
 			case 'help': await interaction.reply({ ephemeral: true, embeds: [help(embed,options)] }); break;
 			case 'supports': await interaction.reply({ ephemeral: true, embeds: [supports(embed,options)] }); break;
 			// case 'quest':
 			// 	break;
-			case 'ai':
-				await interaction.deferReply();
-				const response = await aiQuest(
-					'Jesteś pomocnikiem Mistrza Gry i wspierasz granie RPG. Opowiadasz zwięźle.'
-					,options.getString('prompt')
-					,500
-				);
-				await interaction.editReply(response.data.choices[0].text)
-				break;
+			// case 'ai':
+			// 	await interaction.deferReply();
+			// 	const response = await aiQuest(
+			// 		'Jesteś pomocnikiem Mistrza Gry i wspierasz granie RPG. Opowiadasz zwięźle.'
+			// 		,options.getString('prompt')
+			// 		,500
+			// 	);
+			// 	await interaction.editReply(response.data.choices[0].text)
+			// 	break;
 			default:
 				break;
 		}
 	} catch(error) {
-		saveDataToFile(`Error_${new Date().toISOString()}.txt`, error);
+		console.log(error)
+		// saveDataToFile(`Error_${new Date().toISOString()}.txt`, error);
 	}
 });
 
