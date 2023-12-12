@@ -8,11 +8,16 @@ const embed = (name, url) =>
 const btnReRoll = () => 
     button = new ButtonBuilder()
         .setLabel('Re-roll')
-        .setStyle(ButtonStyle.Secondary)
+        .setStyle(ButtonStyle.Primary)
 ;
 const btnWarn = () =>
-button = new ButtonBuilder()
-    .setStyle(ButtonStyle.Danger)
-    .setDisabled(true)
+    button = new ButtonBuilder()
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(true)
+;
+const btnInfo = () => 
+    button = new ButtonBuilder()
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(true)
 
-module.exports = { embed, btnReRoll, btnWarn }
+module.exports = { embed, btnReRoll, btnWarn, btnInfo }

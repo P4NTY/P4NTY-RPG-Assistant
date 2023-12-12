@@ -4,7 +4,7 @@ const { getResolve } = require("./roll");
 const { rollsInfo } = require("./commands");
 
 const MapNumber = {
-    '-': ':no_entry:',
+    '-': ':heavy_minus_sign:',
     '0': ':zero:',
     '1': ':one:',
     '2': ':two:',
@@ -20,10 +20,19 @@ const MapNumber = {
 const changeNumber = (value) => value.toString().split('').map( char => MapNumber[char]||'').join('');
 
 const simple_roll = (embed,option) => {
-	const result = getResolve(option.getString('command'));
+	let result = getResolve(option.getString('command'));
 	const comment = option.getString('comment')||'';
 	if (comment !== '') embed.setTitle(`${comment}`);
 	
+	const sginToNumber = {
+		':red_square:': -1,
+		':black_large_square:': 0,
+		':green_square:': 1
+	};
+	[':red_square:',':black_large_square:',':green_square:'].forEach( sgin => {
+		result = result.replaceAll(sgin,sginToNumber[sgin])  
+	})
+
 	return embed.setColor('#03bcff')
 		.setFooter({text: 'Own roll'})
 		.addFields({

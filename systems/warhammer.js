@@ -65,4 +65,4 @@ const warhammer = (embed,option) => {
     ] }
 }
 
-module.exports = { warhammer,  }
+module.exports = { warhammer  }

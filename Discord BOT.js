@@ -4,7 +4,7 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 const { REST } = require('@discordjs/rest');
 const { Routes } = require('discord-api-types/v9');
 //functions
-const { supports,help } = require('./bot-funcs');                     
+const { supports,help, simple_roll } = require('./bot-funcs');                     
 const { saveDataToFile } = require('./utils')
 const { aiQuest } = require('./ai')
 //commands
@@ -14,7 +14,7 @@ const { vampire, vampireReRoll } = require('./systems/vampire');
 const { tales, talesReRoll } = require('./systems/tales');
 const { cult } = require('./systems/cult');
 const { glina } = require('./systems/glina');
-const { fate } = require('./systems/fate');
+const { fate, fateReRoll } = require('./systems/fate');
 const { dnd } = require('./systems/dnd');
 const { warhammer } = require('./systems/warhammer');
 // Create a new client instance
@@ -49,6 +49,9 @@ client.on('interactionCreate', async interaction => {
 				case 'cr':
 					await interaction.reply( cthulhuReRoll(embed,reOptions) );
 				break;
+				case 'fr':
+					await interaction.reply({ embeds: [fateReRoll(embed,reOptions)] });
+				break;
 				default:break;
 			}
 		}
@@ -58,7 +61,7 @@ client.on('interactionCreate', async interaction => {
 				try {
 					await interaction.reply({ embeds: [simple_roll(embed,options)] });
 				} catch (error) { 
-					// console.log(error)
+					console.log(error)
 					await interaction.reply( `That's not a counts!` )
 				}
 				break;

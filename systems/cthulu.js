@@ -1,6 +1,6 @@
 const { ActionRowBuilder } = require('discord.js');
 const { roll } = require("../roll");
-const { btnReRoll, btnWarn } = require('../templates');
+const { btnReRoll, btnWarn, btnInfo } = require('../templates');
 const { changeNumber } = require('../bot-funcs');
 
 const sysName = 'Call of Cthulhu 7ed';
@@ -83,21 +83,29 @@ const cthulhu = (embed,option) => {
             },
 		)
     ],
-    components: test <= 1 ? [
+    components: [
         new ActionRowBuilder().addComponents(
-            btnReRoll().setCustomId(
-                JSON.stringify(({
-                    name: 'cr',
-                    skill: skill,
-                    bonus: bonus,
-                    penalty: penalty,
-                }))
-            ),
-            btnWarn()
+            ...[ 
+                test <= 1 ? btnReRoll().setCustomId(
+                    JSON.stringify(({
+                        name: 'cr',
+                        skill: skill,
+                        bonus: bonus,
+                        penalty: penalty,
+                    }))
+                ) : null,
+                test <= 1 ? btnWarn()
                 .setCustomId('luck_info')
-                .setLabel( `🍀 ${result - skill}` )
+                .setLabel( `🍀 ${result - skill}` ) : null,
+                ,btnInfo()
+                    .setCustomId('1/2_info')
+                    .setLabel( `1/2: ${Math.floor(skill/2)}` )
+                ,btnInfo()
+                    .setCustomId('1/5_info')
+                    .setLabel( `1/5: ${Math.floor(skill/5)}` )
+            ].filter( x => x)
         )
-    ] : [] }
+    ] }
 }
 
 const cthulhuReRoll = (embed, {skill, bonus, penalty}) => {
@@ -146,13 +154,23 @@ const cthulhuReRoll = (embed, {skill, bonus, penalty}) => {
             },
 		)
     ],
-    components: test <= 1 ? [
+    components: [
         new ActionRowBuilder().addComponents(
-            btnWarn()
-                .setCustomId('luck_info')
-                .setLabel( `🍀 ${result - skill}` )
+            ...[
+                test <= 1 ?
+                    btnWarn()
+                        .setCustomId('luck_info')
+                        .setLabel( `🍀 ${result - skill}` )
+                : null,
+                btnInfo()
+                    .setCustomId('1/2_info')
+                    .setLabel( `1/2: ${Math.floor(skill/2)}` )
+                ,btnInfo()
+                    .setCustomId('1/5_info')
+                    .setLabel( `1/5: ${Math.floor(skill/5)}` )
+            ].filter(x => x)
         )
-    ] : [] }
+    ] }
 }
 
 module.exports = { cthulhu, cthulhuReRoll };
