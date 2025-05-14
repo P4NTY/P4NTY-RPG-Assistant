@@ -5,12 +5,13 @@ LINK: https://discord.com/api/oauth2/authorize?client_id=726793068908642314&perm
 
 Supports specyfic rolls from these systems:
 - Call of Cthulhu 7ed
-- Warhammer 4ed
-- Tales from the Loop
-- Fate
+- Kult
 - Dungeons and Dragons 5ed
+- Fate
+- Glina
+- Tales from the Loop
 - Vamipire Masquerade 5ed
-- Cult
+- Warhammer 4ed
 
 ## Commands:
 ### Roll /r
